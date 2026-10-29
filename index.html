@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Story AI</title>
+<style>
+body{margin:0;background:#101426;color:#fff;font-family:Arial,sans-serif;padding:20px}
+main{max-width:800px;margin:auto}
+h1{color:#b9a5ff;text-align:center}
+p{color:#d4d7e8}
+textarea,select,input{box-sizing:border-box;width:100%;padding:12px;margin:8px 0 16px;border-radius:10px;border:1px solid #414968;background:#202741;color:white;font-size:16px}
+button{padding:12px 18px;border:0;border-radius:10px;background:#8b70ff;color:white;font-size:16px;cursor:pointer;margin:4px}
+.card{background:#1b2239;padding:16px;border-radius:14px;margin:14px 0;white-space:pre-wrap}
+.small{color:#b7bfd9;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>✨ My Story AI</h1>
+<p style="text-align:center">اپنی کہانی لکھیں اور اسے ویڈیو کے مناظر میں تبدیل کریں۔</p>
+
+<label for="story">📖 اپنی کہانی لکھیں</label>
+<textarea id="story" rows="7" placeholder="یہاں اپنی اردو کہانی لکھیں..."></textarea>
+
+<label for="scenes">مناظر کی تعداد</label>
+<select id="scenes">
+<option value="4">4 مناظر</option>
+<option value="6">6 مناظر</option>
+<option value="8">8 مناظر</option>
+<option value="10">10 مناظر</option>
+</select>
+
+<label for="style">ویڈیو کا انداز</label>
+<select id="style">
+<option>3D Animation</option>
+<option>Cartoon</option>
+<option>Cinematic</option>
+<option>Realistic</option>
+<option>Anime</option>
+</select>
+
+<button onclick="makeStory()">🎬 مناظر بنائیں</button>
+<button onclick="speech()">🗣️ کہانی سنیں</button>
+<button onclick="downloadStory()">📥 متن ڈاؤن لوڈ کریں</button>
+
+<div id="output"></div>
+</main>
+
+<script>
+let result = "";
+
+function makeStory(){
+  const story=document.getElementById('story').value.trim();
+  const count=Number(document.getElementById('scenes').value);
+  const style=document.getElementById('style').value;
+  if(!story){
+    alert('پہلے اپنی کہانی لکھیں۔');
+    return;
+  }
+
+  const sentences=story.split(/[۔.!؟?\n]+/).map(s=>s.trim()).filter(Boolean);
+  const output=document.getElementById('output');
+  output.innerHTML='';
+  result='My Story AI\\n\\n'+story+'\\n\\n';
+
+  for(let i=0;i<count;i++){
+    const part=sentences.length
+      ? sentences[Math.floor(i*sentences.length/count)] || sentences[i%sentences.length]
+      : story;
+    const prompt=`${style} video scene, based on: ${part}. Keep characters consistent, cinematic lighting, 16:9.`;
+    result+=`منظر ${i+1}\\n${part}\\nVideo prompt: ${prompt}\\n\\n`;
+
+    const card=document.createElement('section');
+    card.className='card';
+    const title=document.createElement('h3');
+    title.textContent=`🎞️ منظر ${i+1}`;
+    const description=document.createElement('p');
+    description.textContent=part;
+    const label=document.createElement('p');
+    label.className='small';
+    label.textContent='ویڈیو بنانے کا پرامپٹ';
+    const promptBox=document.createElement('p');
+    promptBox.textContent=prompt;
+    const copy=document.createElement('button');
+    copy.textContent='پرامپٹ کاپی کریں';
+    copy.onclick=()=>navigator.clipboard.writeText(prompt);
+    card.append(title,description,label,promptBox,copy);
+    output.appendChild(card);
+  }
+}
+
+function speech(){
+  const text=document.getElementById('story').value.trim();
+  if(!text){alert('پہلے کہانی لکھیں۔');return;}
+  if(!('speechSynthesis' in window)){
+    alert('یہ براؤزر آواز کی سہولت نہیں دیتا۔');return;
+  }
+  speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang='ur-PK';
+  speechSynthesis.speak(utterance);
+}
+
+function downloadStory(){
+  if(!result){makeStory();if(!result)return;}
+  const blob=new Blob([result],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='my-story.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
